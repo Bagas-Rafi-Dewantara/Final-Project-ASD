@@ -194,46 +194,48 @@ public class GameBoardPanel extends JPanel {
      * Highlights conflicting cells if any conflict is detected.
      */
     public void validateConflicts(int row, int col) {
-        // Clear all conflicts first
-        for (int r = 0; r < SudokuConstants.GRID_SIZE; ++r) {
-            for (int c = 0; c < SudokuConstants.GRID_SIZE; ++c) {
-                if (cells[r][c].status == CellStatus.WRONG_GUESS) {
-                    cells[r][c].paint(); // Revert the conflict background
+        // Bersihkan highlight konflik terkait angka sebelumnya
+        int oldValue = cells[row][col].getPreviousValue();
+        if (oldValue != 0) {
+            for (int r = 0; r < SudokuConstants.GRID_SIZE; ++r) {
+                for (int c = 0; c < SudokuConstants.GRID_SIZE; ++c) {
+                    if (cells[r][c].getText().equals(String.valueOf(oldValue))) {
+                        cells[r][c].setBackground(Cell.BG_GIVEN); // Reset warna ke default
+                    }
                 }
             }
         }
 
-        // Get the value of the cell to validate
-        int value = cells[row][col].getText().isEmpty() ? 0 : Integer.parseInt(cells[row][col].getText());
-        if (value == 0) return; // No need to check empty cells
+        // Periksa konflik untuk angka baru
+        int newValue = cells[row][col].getText().isEmpty() ? 0 : Integer.parseInt(cells[row][col].getText());
+        if (newValue == 0) return; // Tidak perlu memeriksa sel kosong
 
-        // Check for conflicts in the row, column, and sub-grid
         boolean conflictFound = false;
 
-        // Row check
+        // Periksa konflik pada baris
         for (int c = 0; c < SudokuConstants.GRID_SIZE; ++c) {
-            if (c != col && cells[row][c].getText().equals(String.valueOf(value))) {
+            if (c != col && cells[row][c].getText().equals(String.valueOf(newValue))) {
                 cells[row][c].setBackground(Cell.BG_CONFLICT);
                 cells[row][col].setBackground(Cell.BG_CONFLICT);
                 conflictFound = true;
             }
         }
 
-        // Column check
+        // Periksa konflik pada kolom
         for (int r = 0; r < SudokuConstants.GRID_SIZE; ++r) {
-            if (r != row && cells[r][col].getText().equals(String.valueOf(value))) {
+            if (r != row && cells[r][col].getText().equals(String.valueOf(newValue))) {
                 cells[r][col].setBackground(Cell.BG_CONFLICT);
                 cells[row][col].setBackground(Cell.BG_CONFLICT);
                 conflictFound = true;
             }
         }
 
-        // Sub-grid check
+        // Periksa konflik pada subgrid
         int startRow = (row / SudokuConstants.SUBGRID_SIZE) * SudokuConstants.SUBGRID_SIZE;
         int startCol = (col / SudokuConstants.SUBGRID_SIZE) * SudokuConstants.SUBGRID_SIZE;
         for (int r = startRow; r < startRow + SudokuConstants.SUBGRID_SIZE; ++r) {
             for (int c = startCol; c < startCol + SudokuConstants.SUBGRID_SIZE; ++c) {
-                if ((r != row || c != col) && cells[r][c].getText().equals(String.valueOf(value))) {
+                if ((r != row || c != col) && cells[r][c].getText().equals(String.valueOf(newValue))) {
                     cells[r][c].setBackground(Cell.BG_CONFLICT);
                     cells[row][col].setBackground(Cell.BG_CONFLICT);
                     conflictFound = true;
@@ -241,11 +243,40 @@ public class GameBoardPanel extends JPanel {
             }
         }
 
-        // If conflict is found, update cell status
+        // Update status berdasarkan konflik
         if (conflictFound) {
             cells[row][col].status = CellStatus.WRONG_GUESS;
         } else {
             cells[row][col].status = CellStatus.CORRECT_GUESS;
+        }
+    }
+
+    private void clearPreviousConflicts(int oldValue, int row, int col) {
+        if (oldValue == 0) return; // Tidak ada konflik jika angka sebelumnya adalah 0 (kosong)
+
+        // Bersihkan highlight pada baris
+        for (int c = 0; c < SudokuConstants.GRID_SIZE; ++c) {
+            if (cells[row][c].getText().equals(String.valueOf(oldValue))) {
+                cells[row][c].setBackground(Cell.BG_GIVEN);
+            }
+        }
+
+        // Bersihkan highlight pada kolom
+        for (int r = 0; r < SudokuConstants.GRID_SIZE; ++r) {
+            if (cells[r][col].getText().equals(String.valueOf(oldValue))) {
+                cells[r][col].setBackground(Cell.BG_GIVEN);
+            }
+        }
+
+        // Bersihkan highlight pada subgrid
+        int startRow = (row / SudokuConstants.SUBGRID_SIZE) * SudokuConstants.SUBGRID_SIZE;
+        int startCol = (col / SudokuConstants.SUBGRID_SIZE) * SudokuConstants.SUBGRID_SIZE;
+        for (int r = startRow; r < startRow + SudokuConstants.SUBGRID_SIZE; ++r) {
+            for (int c = startCol; c < startCol + SudokuConstants.SUBGRID_SIZE; ++c) {
+                if (cells[r][c].getText().equals(String.valueOf(oldValue))) {
+                    cells[r][c].setBackground(Cell.BG_GIVEN);
+                }
+            }
         }
     }
 
@@ -268,15 +299,25 @@ public class GameBoardPanel extends JPanel {
                 }
 
                 // Validate conflicts in the row, column, and sub-grid
+                // Simpan angka sebelumnya sebelum mengubah teks sel
+                int oldValue = sourceCell.getPreviousValue();
+                sourceCell.setPreviousValue(sourceCell.getText().isEmpty() ? 0 : Integer.parseInt(sourceCell.getText()));
+
+                // Hapus highlight konflik angka sebelumnya
+                clearPreviousConflicts(oldValue, sourceCell.row, sourceCell.col);
+
+                // Validasi konflik setelah input diubah
                 validateConflicts(sourceCell.row, sourceCell.col);
 
                 if (sourceCell.status == CellStatus.CORRECT_GUESS) {
                     SoundPlayer.playSound("src/correct.wav ");
                     points++;
+                    sourceCell.paint();
 
                 } else if (sourceCell.status == CellStatus.WRONG_GUESS) {
                     SoundPlayer.playSound("src/wrong.wav");
                     points--;
+                    sourceCell.paint();
 
                 }
 

@@ -28,6 +28,7 @@ public class Cell extends JTextField {
     public static final Color BG_WRONG_GUESS   = new Color(216, 0, 0);
     public static final Font FONT_NUMBERS = new Font("OCR A Extended", Font.PLAIN, 28);
     public static final Color BG_CONFLICT = new Color(255, 165, 0); // Orange for conflict
+    private int previousValue=0;
 
 
 
@@ -75,5 +76,13 @@ public class Cell extends JTextField {
         } else if (status == CellStatus.WRONG_GUESS) {    // from TO_GUESS
             super.setBackground(BG_WRONG_GUESS);
         }
+
+    }
+    public int getPreviousValue() {
+        return previousValue;
+    }
+
+    public void setPreviousValue(int value) {
+        this.previousValue = value;
     }
 }
