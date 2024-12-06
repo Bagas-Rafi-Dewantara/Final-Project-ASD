@@ -122,6 +122,69 @@ public class GameBoardPanel extends JPanel {
         }
     }
 
+    /**
+     * Check for conflicts in the row, column, and sub-grid of the given cell.
+     * Highlights conflicting cells if any conflict is detected.
+     */
+    public void validateConflicts(int row, int col) {
+        // Clear all conflicts first
+        for (int r = 0; r < SudokuConstants.GRID_SIZE; ++r) {
+            for (int c = 0; c < SudokuConstants.GRID_SIZE; ++c) {
+                if (cells[r][c].status == CellStatus.WRONG_GUESS) {
+                    cells[r][c].paint(); // Revert the conflict background
+                }
+            }
+        }
+
+        // Get the value of the cell to validate
+        int value = cells[row][col].getText().isEmpty() ? 0 : Integer.parseInt(cells[row][col].getText());
+        if (value == 0) return; // No need to check empty cells
+
+        // Check for conflicts in the row, column, and sub-grid
+        boolean conflictFound = false;
+
+        // Row check
+        for (int c = 0; c < SudokuConstants.GRID_SIZE; ++c) {
+            if (c != col && cells[row][c].getText().equals(String.valueOf(value))) {
+                cells[row][c].setBackground(Cell.BG_CONFLICT);
+                cells[row][col].setBackground(Cell.BG_CONFLICT);
+                conflictFound = true;
+            }
+        }
+
+        // Column check
+        for (int r = 0; r < SudokuConstants.GRID_SIZE; ++r) {
+            if (r != row && cells[r][col].getText().equals(String.valueOf(value))) {
+                cells[r][col].setBackground(Cell.BG_CONFLICT);
+                cells[row][col].setBackground(Cell.BG_CONFLICT);
+                conflictFound = true;
+            }
+        }
+
+        // Sub-grid check
+        int startRow = (row / SudokuConstants.SUBGRID_SIZE) * SudokuConstants.SUBGRID_SIZE;
+        int startCol = (col / SudokuConstants.SUBGRID_SIZE) * SudokuConstants.SUBGRID_SIZE;
+        for (int r = startRow; r < startRow + SudokuConstants.SUBGRID_SIZE; ++r) {
+            for (int c = startCol; c < startCol + SudokuConstants.SUBGRID_SIZE; ++c) {
+                if ((r != row || c != col) && cells[r][c].getText().equals(String.valueOf(value))) {
+                    cells[r][c].setBackground(Cell.BG_CONFLICT);
+                    cells[row][col].setBackground(Cell.BG_CONFLICT);
+                    conflictFound = true;
+                }
+            }
+        }
+
+        // If conflict is found, update cell status
+        if (conflictFound) {
+            cells[row][col].status = CellStatus.WRONG_GUESS;
+        } else {
+            cells[row][col].status = CellStatus.CORRECT_GUESS;
+        }
+    }
+
+
+
+
     // [TODO 2] Define a Listener Inner Class for all the editable Cells
     private class CellInputListener implements ActionListener {
         @Override
@@ -129,24 +192,26 @@ public class GameBoardPanel extends JPanel {
             // Get a reference of the JTextField that triggers this action event
             Cell sourceCell = (Cell)e.getSource();
 
-            // Retrieve the int entered
-            int numberIn = Integer.parseInt(sourceCell.getText());
-            // For debugging
-            System.out.println("You entered " + numberIn);
+            try {
+                int numberIn = Integer.parseInt(sourceCell.getText());
+                System.out.println("You entered " + numberIn);
 
-            /*
-             * [TODO 5] (later - after TODO 3 and 4)
-             * Check the numberIn against sourceCell.number.
-             * Update the cell status sourceCell.status,
-             * and re-paint the cell via sourceCell.paint().
-             */
-            if (numberIn == sourceCell.number) {
-                sourceCell.status = CellStatus.CORRECT_GUESS;
-            } else {
-                sourceCell.status = CellStatus.WRONG_GUESS;
+                if (numberIn < 1 || numberIn > 9) {
+                    throw new NumberFormatException();
+                }
+
+                // Validate conflicts in the row, column, and sub-grid
+                validateConflicts(sourceCell.row, sourceCell.col);
+
+                // Check if the puzzle is solved
+                if (isSolved()) {
+                    JOptionPane.showMessageDialog(null, "Congratulations! You solved the puzzle!");
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Please enter a valid number between 1 and 9", "Invalid Input",
+                        JOptionPane.ERROR_MESSAGE);
+                sourceCell.setText(""); // Clear invalid input
             }
-            sourceCell.paint();   // re-paint this cell based on its status
-
             /*
              * [TODO 6] (later)
              * Check if the player has solved the puzzle after this move,
