@@ -2,21 +2,12 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.border.LineBorder;
 
 public class GameBoardPanel extends JPanel {
     private static final long serialVersionUID = 1L;  // to prevent serial warning
 
     // Define named constants for UI sizes
-    private String playerName;
-    private boolean gameFinished = false;
-
-    static Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-    static int screenHeight = screenSize.height;
-    int screenWidth = screenSize.width;
-
-    // Define named constants for UI sizes
-    public static int CELL_SIZE = screenHeight/14;   // Cell width/height in pixels
+    public static final int CELL_SIZE = 60;   // Cell width/height in pixels
     public static final int BOARD_WIDTH  = CELL_SIZE * SudokuConstants.GRID_SIZE;
     public static final int BOARD_HEIGHT = CELL_SIZE * SudokuConstants.GRID_SIZE;
     // Board width/height in pixels
@@ -26,39 +17,45 @@ public class GameBoardPanel extends JPanel {
     private Cell[][] cells = new Cell[SudokuConstants.GRID_SIZE][SudokuConstants.GRID_SIZE];
     /** It also contains a Puzzle with array numbers and isGiven */
     private Puzzle puzzle = new Puzzle();
-    JPanel gridsudoku = new JPanel();
-    JComboBox<String> difficultyComboBox;
-    private int totalScore;
-
-    private JLabel scoreLabel = new JLabel("Total Score: 0");
-
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
-    }
 
     /** Constructor */
     public GameBoardPanel() {
-        super.setLayout(new BorderLayout());
-        super.add(gridsudoku, BorderLayout.CENTER);
-        gridsudoku.setPreferredSize(new Dimension(BOARD_WIDTH,BOARD_HEIGHT));
-        gridsudoku.setBorder(new LineBorder(new Color(190, 208, 238),15));
-        gridsudoku.setLayout(new GridLayout(SudokuConstants.SUBGRID_SIZE, SudokuConstants.SUBGRID_SIZE));
+        super.setLayout(new GridLayout(SudokuConstants.GRID_SIZE, SudokuConstants.GRID_SIZE));
 
-        // Allocate the 2D array of Cell, and added into JPanel.
-        for (int row = 0; row < SudokuConstants.SUBGRID_SIZE; row++) {
-            for (int col = 0; col < SudokuConstants.SUBGRID_SIZE; col++) {
-                JPanel subgridpanel = new JPanel();
-                subgridpanel.setLayout(new GridLayout(SudokuConstants.SUBGRID_SIZE, SudokuConstants.SUBGRID_SIZE));
-                subgridpanel.setBorder(new LineBorder(new Color(251, 217, 216),2));
-                for (int i=0; i < SudokuConstants.SUBGRID_SIZE; i++) {
-                    for (int j=0; j < SudokuConstants.SUBGRID_SIZE; j++) {
-                        cells[row*3+i][col*3+j] = new Cell(row*3+i, col*3+j);
-                        subgridpanel.add(cells[row*3+i][col*3+j]);
-                    }
+        for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
+            for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
+                cells[row][col] = new Cell(row, col);
+
+                // Tambahkan border khusus untuk pemisah kotak 3x3
+                Border thickBorderVertical = BorderFactory.createMatteBorder(0, 2, 0, 0, Color.BLACK);
+                Border thickBorderHorizontal = BorderFactory.createMatteBorder(2, 0, 0, 0, Color.BLACK);
+
+                if (col > 0 && col % 3 == 0) {
+                    cells[row][col].setBorder(BorderFactory.createCompoundBorder(
+                            thickBorderVertical,
+                            BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1)
+                    ));
                 }
-                gridsudoku.add(subgridpanel);
+
+                if (row > 0 && row % 3 == 0) {
+                    cells[row][col].setBorder(BorderFactory.createCompoundBorder(
+                            thickBorderHorizontal,
+                            BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1)
+                    ));
+                }
+
+                // Untuk sel di pojok kiri atas setiap kotak 3x3
+                if ((col > 0 && col % 3 == 0) && (row > 0 && row % 3 == 0)) {
+                    cells[row][col].setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createMatteBorder(2, 2, 0, 0, Color.BLACK),
+                            BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1)
+                    ));
+                }
+
+                super.add(cells[row][col]);
             }
         }
+
 
         // [TODO 3] Allocate a common listener as the ActionEvent listener for all the
         //  Cells (JTextFields)
@@ -72,6 +69,7 @@ public class GameBoardPanel extends JPanel {
                 }
             }
         }
+
         super.setPreferredSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
     }
 
@@ -205,41 +203,35 @@ public class GameBoardPanel extends JPanel {
                 // Validate conflicts in the row, column, and sub-grid
                 validateConflicts(sourceCell.row, sourceCell.col);
 
+                if (sourceCell.status == CellStatus.CORRECT_GUESS) {
+                    SoundPlayer.playSound("correct.wav");
+                } else if (sourceCell.status == CellStatus.WRONG_GUESS) {
+                    SoundPlayer.playSound("wrong.wav");
+                }
+
+
+
+
                 // Check if the puzzle is solved
                 if (isSolved()) {
+                    SoundPlayer.playSound("win.wav");
                     JOptionPane.showMessageDialog(null, "Congratulations! You solved the puzzle!");
+
                 }
             } catch (NumberFormatException ex) {
+                SoundPlayer.playSound("wrong.wav");
                 JOptionPane.showMessageDialog(null, "Please enter a valid number between 1 and 9", "Invalid Input",
                         JOptionPane.ERROR_MESSAGE);
                 sourceCell.setText(""); // Clear invalid input
             }
+
+
             /*
              * [TODO 6] (later)
              * Check if the player has solved the puzzle after this move,
              *   by calling isSolved(). Put up a congratulation JOptionPane, if so.
              */
             if(isSolved()) JOptionPane.showMessageDialog(null, "Congratulation!");
-        }
-    }
-
-    public void keyTyped(KeyEvent e) {
-        Cell sourceCell = (Cell) e.getSource();
-        String text = sourceCell.getText() + e.getKeyChar();
-        if (text.length() > 1) {
-            e.consume();
-            return;
-        }
-        try {
-            int numberIn = Integer.parseInt(text);
-            if (numberIn < 1 || numberIn > 9) {
-                throw new NumberFormatException();
-            } validateConflicts(sourceCell.row, sourceCell.col);
-            if (isSolved()) {
-                JOptionPane.showMessageDialog(null, "Congratulations! You solved the puzzle!");
-            }
-        } catch (NumberFormatException ex) {
-            e.consume(); JOptionPane.showMessageDialog(null, "Please enter a valid number between 1 and 9", "Invalid Input", JOptionPane.ERROR_MESSAGE);
         }
     }
 
