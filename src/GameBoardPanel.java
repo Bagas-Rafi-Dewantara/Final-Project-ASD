@@ -246,6 +246,7 @@ public class GameBoardPanel extends JPanel {
         // Update status berdasarkan konflik
         if (conflictFound) {
             cells[row][col].status = CellStatus.WRONG_GUESS;
+
         } else {
             cells[row][col].status = CellStatus.CORRECT_GUESS;
         }
@@ -310,16 +311,17 @@ public class GameBoardPanel extends JPanel {
                 validateConflicts(sourceCell.row, sourceCell.col);
 
                 if (sourceCell.status == CellStatus.CORRECT_GUESS) {
-                    SoundPlayer.playSound("src/correct.wav ");
                     points++;
+                    SoundPlayer.playSound("src/correct.wav ");
                     sourceCell.paint();
 
                 } else if (sourceCell.status == CellStatus.WRONG_GUESS) {
-                    SoundPlayer.playSound("src/wrong.wav");
                     points--;
+                    SoundPlayer.playSound("src/wrong.wav");
                     sourceCell.paint();
 
                 }
+                updatePointsLabel();
 
 
 
