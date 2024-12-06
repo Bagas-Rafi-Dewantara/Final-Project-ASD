@@ -9,8 +9,11 @@ public class Sudoku extends JFrame {
     // private variables
     GameBoardPanel board = new GameBoardPanel();
     JButton btnNewGame = new JButton("New Game");
+    // Tambahkan di dalam kelas Sudoku
     JButton btnResetGame = new JButton("Reset Game"); // Tombol untuk Reset Game
 
+    JComboBox<String> levelSelector;
+    JPanel buttonPanel = new JPanel();
 
     // Constructor
     public Sudoku() {
@@ -19,42 +22,62 @@ public class Sudoku extends JFrame {
 
         cp.add(board, BorderLayout.CENTER);
 
-        // Add a button to the south to re-start the game via board.newGame()
-        // ......
+        // Create level selector
+        String[] levels = {"Easy", "Medium", "Hard"};
+        levelSelector = new JComboBox<>(levels);
+
+        // Add action listener to level selector for automatic game start
+        levelSelector.addActionListener(e -> startNewGame());
+
+        // Add components to button panel
+        buttonPanel.setLayout(new FlowLayout());
+        buttonPanel.add(new JLabel("Difficulty: "));
+        buttonPanel.add(levelSelector);
+
+        buttonPanel.add(btnResetGame);
+
+        // Add button panel to the south
+        cp.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Add action listener for Reset Game button
+
+        btnResetGame.addActionListener(e -> board.resetGame());
 
         // Initialize the game board to start the game
-        board.newGame();
+        startNewGame();
+//        board.newGame();
 
         pack();     // Pack the UI components, instead of using setSize()
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  // to handle window-closing
         setTitle("Sudoku");
         setVisible(true);
-
-        // Panel bawah untuk tombol
-        JPanel southPanel = new JPanel();
-        southPanel.setLayout(new FlowLayout());
-        southPanel.add(btnNewGame);
-        southPanel.add(btnResetGame); // Tambahkan tombol Reset Game
-        cp.add(southPanel, BorderLayout.SOUTH);
-
-        // Tambahkan Action Listener untuk tombol Reset
-        btnResetGame.addActionListener(e -> board.resetGame());
-
-        // Tambahkan Action Listener untuk tombol New Game
-        btnNewGame.addActionListener(e -> board.newGame());
-
-
-
-
-
-        // Initialize the game board to start the game
-        board.newGame();
-
-        pack(); // Pack the UI components, instead of using setSize()
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Handle window-closing
-        setTitle("Sudoku");
-        setVisible(true);
     }
 
+    // Start a new game based on selected difficulty
+    private void startNewGame() {
+        String level = (String) levelSelector.getSelectedItem();
+        int cellsToGuess;
 
+        switch (level) {
+            case "Easy":
+                cellsToGuess = 36;
+                break;
+            case "Medium":
+                cellsToGuess = 45;
+                break;
+            case "Hard":
+                cellsToGuess = 49;
+                break;
+            default:
+                cellsToGuess = 36; // Default to Easy
+        }
+
+        board.newGame(cellsToGuess);
+    }
+
+    /** The entry main() entry method */
+    public static void play() {
+        // Run the game in the Event Dispatch Thread for thread safety
+        SwingUtilities.invokeLater(() -> new Sudoku());
+    }
 }

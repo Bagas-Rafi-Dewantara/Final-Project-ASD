@@ -20,6 +20,7 @@ public class Cell extends JTextField {
     public static final Color BG_CONFLICT = new Color(255, 165, 0); // Orange for conflict
 
 
+
     // Define properties (package-visible)
     /** The row and column number [0-8] of this cell */
     int row, col;
