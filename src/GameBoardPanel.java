@@ -203,15 +203,29 @@ public class GameBoardPanel extends JPanel {
                 // Validate conflicts in the row, column, and sub-grid
                 validateConflicts(sourceCell.row, sourceCell.col);
 
+                if (sourceCell.status == CellStatus.CORRECT_GUESS) {
+                    SoundPlayer.playSound("correct.wav");
+                } else if (sourceCell.status == CellStatus.WRONG_GUESS) {
+                    SoundPlayer.playSound("wrong.wav");
+                }
+
+
+
+
                 // Check if the puzzle is solved
                 if (isSolved()) {
+                    SoundPlayer.playSound("win.wav");
                     JOptionPane.showMessageDialog(null, "Congratulations! You solved the puzzle!");
+
                 }
             } catch (NumberFormatException ex) {
+                SoundPlayer.playSound("wrong.wav");
                 JOptionPane.showMessageDialog(null, "Please enter a valid number between 1 and 9", "Invalid Input",
                         JOptionPane.ERROR_MESSAGE);
                 sourceCell.setText(""); // Clear invalid input
             }
+
+
             /*
              * [TODO 6] (later)
              * Check if the player has solved the puzzle after this move,
