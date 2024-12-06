@@ -18,17 +18,39 @@ public class GameBoardPanel extends JPanel {
     /** It also contains a Puzzle with array numbers and isGiven */
     private Puzzle puzzle = new Puzzle();
 
+    private Timer timer;
+    private int totalSeconds;
+    private JLabel timerLabel;
+    private JPanel timerPanel = new JPanel();
+    private JPanel pointsPanel = new JPanel();
+    private JPanel sudokuGrid = new JPanel();
+    private JLabel pointsLabel;
+    private int points;
+
+
+
     /** Constructor */
     public GameBoardPanel() {
-        super.setLayout(new GridLayout(SudokuConstants.GRID_SIZE, SudokuConstants.GRID_SIZE));
+
+        super.setLayout(new BorderLayout());
+
+        super.add(timerPanel, BorderLayout.NORTH);
+        super.add(pointsPanel, BorderLayout.SOUTH);
+        super.add(sudokuGrid, BorderLayout.CENTER);
+
+        sudokuGrid.setLayout(new GridLayout(SudokuConstants.GRID_SIZE, SudokuConstants.GRID_SIZE));
+
+
 
         for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
             for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
                 cells[row][col] = new Cell(row, col);
+                sudokuGrid.add(cells[row][col]);
 
                 // Tambahkan border khusus untuk pemisah kotak 3x3
                 Border thickBorderVertical = BorderFactory.createMatteBorder(0, 2, 0, 0, Color.BLACK);
                 Border thickBorderHorizontal = BorderFactory.createMatteBorder(2, 0, 0, 0, Color.BLACK);
+
 
                 if (col > 0 && col % 3 == 0) {
                     cells[row][col].setBorder(BorderFactory.createCompoundBorder(
@@ -37,12 +59,14 @@ public class GameBoardPanel extends JPanel {
                     ));
                 }
 
+
                 if (row > 0 && row % 3 == 0) {
                     cells[row][col].setBorder(BorderFactory.createCompoundBorder(
                             thickBorderHorizontal,
                             BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1)
                     ));
                 }
+
 
                 // Untuk sel di pojok kiri atas setiap kotak 3x3
                 if ((col > 0 && col % 3 == 0) && (row > 0 && row % 3 == 0)) {
@@ -52,9 +76,33 @@ public class GameBoardPanel extends JPanel {
                     ));
                 }
 
-                super.add(cells[row][col]);
+                sudokuGrid.add(cells[row][col]);
+
+
             }
+
+
         }
+
+        points = 0;
+        pointsLabel = new JLabel("Points: 0");
+        pointsLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        pointsPanel.add(pointsLabel);
+
+        totalSeconds = 0;
+        timerLabel = new JLabel("Timer: 0s");
+        timerLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        timerPanel.add(timerLabel);
+
+        timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                totalSeconds++;
+                updateTimerLabel();
+            }
+        });
+        timer.start(); // Start the timer
+
 
 
         // [TODO 3] Allocate a common listener as the ActionEvent listener for all the
@@ -88,6 +136,9 @@ public class GameBoardPanel extends JPanel {
                 cells[row][col].newGame(puzzle.numbers[row][col], puzzle.isGiven[row][col]);
             }
         }
+        resetTimer();
+        startTimer();
+
     }
 
     /**
@@ -95,6 +146,8 @@ public class GameBoardPanel extends JPanel {
      */
     public void newGame() {
         newGame(36); // Default to Easy mode
+        startTimer();
+
     }
 
     /**
@@ -120,6 +173,10 @@ public class GameBoardPanel extends JPanel {
                 cells[row][col].newGame(number, isGiven); // Reset cell
             }
         }
+        resetTimer();
+
+        startTimer();
+
     }
 
     /**
@@ -204,9 +261,13 @@ public class GameBoardPanel extends JPanel {
                 validateConflicts(sourceCell.row, sourceCell.col);
 
                 if (sourceCell.status == CellStatus.CORRECT_GUESS) {
-                    SoundPlayer.playSound("src/correct.wav");
+                    SoundPlayer.playSound("src/correct.wav ");
+                    points++;
+
                 } else if (sourceCell.status == CellStatus.WRONG_GUESS) {
                     SoundPlayer.playSound("src/wrong.wav");
+                    points--;
+
                 }
 
 
@@ -233,6 +294,33 @@ public class GameBoardPanel extends JPanel {
              */
             if(isSolved()) JOptionPane.showMessageDialog(null, "Congratulation!");
         }
+
     }
+    public void resetTimer() {
+        timer.stop();
+        totalSeconds = 0; // Reset total detik ke 0
+        updateTimerLabel(); // Perbarui tampilan timer
+    }
+    public void startTimer() {
+        timer.start();
+    }
+
+    public void stopTimer() {
+        timer.stop();
+    }
+
+    public void updateTimerLabel() {
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
+        int seconds = totalSeconds % 60;
+        timerLabel.setText(String.format("Timer: %02d:%02d:%02d", hours, minutes, seconds));
+    }
+
+    private void updatePointsLabel() {
+        pointsLabel.setText("Points: " + points);
+    }
+
+
+
 
 }

@@ -58,6 +58,7 @@ public class Sudoku extends JFrame {
         String level = (String) levelSelector.getSelectedItem();
         int cellsToGuess;
 
+
         switch (level) {
             case "Easy":
                 cellsToGuess = 36;
@@ -73,7 +74,9 @@ public class Sudoku extends JFrame {
         }
 
         board.newGame(cellsToGuess);
+
     }
+
 
     /** The entry main() entry method */
     public static void play() {
