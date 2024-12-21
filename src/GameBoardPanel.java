@@ -136,9 +136,9 @@ public class GameBoardPanel extends JPanel {
      * You can call this method to start a new game.
      * @param cellsToGuess number of cells to guess (controls difficulty)
      */
-    public void newGame(int cellsToGuess) {
+    public void newGame(int cellsToFill) {
         // Generate a new puzzle
-        puzzle.newPuzzle(cellsToGuess);
+        puzzle.newPuzzle(cellsToFill);
 
         // Initialize all the 9x9 cells, based on the puzzle.
         for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {

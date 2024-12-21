@@ -66,24 +66,24 @@ public class Sudoku extends JFrame {
     // Start a new game based on selected difficulty
     private void startNewGame() {
         String level = (String) levelSelector.getSelectedItem();
-        int cellsToGuess;
+        int cellsToFill;
 
 
         switch (level) {
             case "Easy":
-                cellsToGuess = 36;
+                cellsToFill = 71;
                 break;
             case "Medium":
-                cellsToGuess = 45;
+                cellsToFill = 61;
                 break;
             case "Hard":
-                cellsToGuess = 49;
+                cellsToFill = 51;
                 break;
             default:
-                cellsToGuess = 36; // Default to Easy
+                cellsToFill = 71; // Default to Easy
         }
 
-        board.newGame(cellsToGuess);
+        board.newGame(cellsToFill);
 
     }
 
